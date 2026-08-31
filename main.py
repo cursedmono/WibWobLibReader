@@ -8,6 +8,8 @@ from reader.string_filters import (
     filter_libraries
 )
 
+from reader.cpp_demangler import demangle_symbols
+
 
 def show_filter_results(title, results):
 
@@ -164,14 +166,43 @@ def main():
 
             elif option == "4":
 
-                results = filter_cpp_symbols(
-                    strings
-                )
+                results = filter_cpp_symbols(strings)
 
-                show_filter_results(
-                    "Símbolos C++",
-                    results
-                )
+                print("\n" + "=" * 60)
+                print("Símbolos C++")
+                print("=" * 60)
+
+                print(f"Encontrados: {len(results):,}")
+
+                symbols = [
+                    string["text"]
+                    for string in results
+                ]
+
+                print("\nDemangling...")
+
+                demangled = demangle_symbols(symbols)
+
+                for i, string in enumerate(results):
+
+                    original = string["text"]
+
+                    readable = demangled[i]
+
+                    print(
+                        f"[{i + 1:04}] "
+                        f"0x{string['offset']:08X}"
+                    )
+
+                    print(
+                        f"       {readable}"
+                    )
+
+                    if readable != original:
+
+                        print(
+                            f"       [{original}]"
+                        )
 
             # ======================================
             # URLs
