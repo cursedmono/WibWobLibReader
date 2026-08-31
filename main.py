@@ -10,6 +10,12 @@ from reader.string_filters import (
 
 from reader.cpp_demangler import demangle_symbols
 
+from reader.exporter import (
+    export_strings,
+    export_cpp_symbols,
+    export_filter
+)
+
 
 def show_filter_results(title, results):
 
@@ -102,6 +108,7 @@ def main():
             print("5 - URLs")
             print("6 - Caminhos")
             print("7 - Bibliotecas (.so)")
+            print("8 - Exportar")
             print("0 - Sair")
 
             option = input("\nEscolha: ").strip()
@@ -248,6 +255,58 @@ def main():
                     "Bibliotecas (.so)",
                     results
                 )
+
+
+            # ======================================
+            # EXPORTAR
+            # ======================================
+
+            elif option == "8":
+
+                print("\nExportando análise...")
+
+                output_dir = "output"
+
+                cpp_symbols = filter_cpp_symbols(strings)
+
+                file1 = export_strings(
+                    strings,
+                    output_dir
+                )
+
+                file2 = export_cpp_symbols(
+                    cpp_symbols,
+                    output_dir
+                )
+
+                file3 = export_filter(
+                    strings,
+                    output_dir,
+                    "urls.txt",
+                    filter_urls
+                )
+
+                file4 = export_filter(
+                    strings,
+                    output_dir,
+                    "paths.txt",
+                    filter_paths
+                )
+
+                file5 = export_filter(
+                    strings,
+                    output_dir,
+                    "libraries.txt",
+                    filter_libraries
+                )
+
+                print("\nExportação concluída!")
+
+                print(f"\n{file1}")
+                print(file2)
+                print(file3)
+                print(file4)
+                print(file5)
 
             # ======================================
             # SAIR

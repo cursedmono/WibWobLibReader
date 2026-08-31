@@ -1,0 +1,11 @@
+0x01028D1D libc.so
+0x01028D25 libGLESv2.so
+0x01028D32 liblog.so
+0x01028D3C libz.so
+0x01028D44 libandroid.so
+0x01028D52 libOpenSLES.so
+0x01028D61 libm.so
+0x01028D69 libstdc++.so
+0x01028D76 libdl.so
+0x01028D7F libSGF.so
+0x022DA078 libdl.so
