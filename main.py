@@ -105,11 +105,12 @@ def main():
             print("2 - Mostrar primeiras strings")
             print("3 - Mostrar total")
             print("4 - C++ Symbols")
-            print("5 - URLs")
-            print("6 - Caminhos")
-            print("7 - Bibliotecas (.so)")
-            print("8 - Exportar")
-            print("0 - Sair")
+            print("5 - Imports")
+            print("6 - Exports")
+            print("7 - URLs")
+            print("8 - Caminhos")
+            print("9 - Bibliotecas (.so)")
+            print("10 - Exportar")
 
             option = input("\nEscolha: ").strip()
 
@@ -212,10 +213,62 @@ def main():
                         )
 
             # ======================================
-            # URLs
+            # IMPORTS
             # ======================================
 
             elif option == "5":
+
+                results = reader.get_imports()
+
+                print("\n" + "=" * 60)
+                print("Imports ELF")
+                print("=" * 60)
+
+                print(
+                    f"Encontrados: {len(results):,}"
+                )
+
+                for i, symbol in enumerate(
+                    results,
+                    1
+                ):
+
+                    print(
+                        f"[{i:04}] {symbol}"
+                    )
+
+            # ======================================
+            # EXPORTS
+            # ======================================
+
+            elif option == "6":
+
+                results = reader.get_exports()
+
+                print("\n" + "=" * 60)
+                print("Exports ELF")
+                print("=" * 60)
+
+                print(
+                    f"Encontrados: {len(results):,}"
+                )
+
+                for i, symbol in enumerate(
+                    results,
+                    1
+                ):
+
+                    print(
+                        f"[{i:04}] "
+                        f"0x{symbol['value']:08X} "
+                        f"{symbol['name']}"
+                    )
+
+            # ======================================
+            # URLs
+            # ======================================
+
+            elif option == "7":
 
                 results = filter_urls(
                     strings
@@ -230,7 +283,7 @@ def main():
             # CAMINHOS
             # ======================================
 
-            elif option == "6":
+            elif option == "8":
 
                 results = filter_paths(
                     strings
@@ -245,7 +298,7 @@ def main():
             # BIBLIOTECAS
             # ======================================
 
-            elif option == "7":
+            elif option == "9":
 
                 results = filter_libraries(
                     strings
@@ -261,7 +314,7 @@ def main():
             # EXPORTAR
             # ======================================
 
-            elif option == "8":
+            elif option == "10":
 
                 print("\nExportando análise...")
 
