@@ -112,6 +112,7 @@ def main():
             print("9 - Caminhos")
             print("10 - Bibliotecas (.so)")
             print("11 - Exportar")
+            print("12 - Localizar Endereço")
             print("0 - Sair")
 
             option = input("\nEscolha: ").strip()
@@ -498,6 +499,81 @@ def main():
                 print(file3)
                 print(file4)
                 print(file5)
+
+
+            # ======================================
+            # LOCALIZAR ENDEREÇO
+            # ======================================
+
+            elif option == "12":
+
+                print("\n" + "=" * 60)
+                print("Localizar endereço ELF")
+                print("=" * 60)
+
+                address_input = input(
+                    "\nDigite o endereço hexadecimal: "
+                ).strip()
+
+                try:
+
+                    address = int(
+                        address_input,
+                        16
+                    )
+
+                    result = (
+                        reader.find_section_by_address(
+                            address
+                        )
+                    )
+
+                    if result is None:
+
+                        print(
+                            "\nNenhuma section encontrada "
+                            "para esse endereço."
+                        )
+
+                    else:
+
+                        print(
+                            f"\nSection:          "
+                            f"{result['section']}"
+                        )
+
+                        print(
+                            f"Endereço:         "
+                            f"0x{result['address']:08X}"
+                        )
+
+                        print(
+                            f"Endereço section: "
+                            f"0x{result['section_address']:08X}"
+                        )
+
+                        print(
+                            f"Tamanho section:  "
+                            f"{result['section_size']:,} bytes"
+                        )
+
+                        print(
+                            f"Offset na section:"
+                            f" 0x"
+                            f"{result['offset_in_section']:08X}"
+                        )
+
+                        print(
+                            f"Offset no arquivo: "
+                            f"0x"
+                            f"{result['file_offset']:08X}"
+                        )
+
+                except ValueError:
+
+                    print(
+                        "\nEndereço inválido."
+                    )
 
             # ======================================
             # SAIR

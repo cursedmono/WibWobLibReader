@@ -1,6 +1,5 @@
 import struct
 
-
 class ELFReader:
 
     def __init__(self, path):
@@ -329,6 +328,7 @@ class ELFReader:
             name_offset = section["name_offset"]
 
             if name_offset >= len(string_data):
+
                 section["name"] = ""
 
                 continue
@@ -353,6 +353,75 @@ class ELFReader:
         return sections
 
     # ==============================================
+    # FIND SECTION BY ADDRESS
+    # ==============================================
+
+    def find_section_by_address(self, address):
+
+        sections = self.get_section_headers()
+
+        if not sections:
+            return None
+
+        for section in sections:
+
+            section_address = section.get(
+                "addr",
+                0
+            )
+
+            section_size = section.get(
+                "size",
+                0
+            )
+
+            # Sections sem endereço
+            if section_address == 0:
+                continue
+
+            # Sections vazias
+            if section_size == 0:
+                continue
+
+            section_end = (
+                section_address +
+                section_size
+            )
+
+            if (
+                address >= section_address
+                and address < section_end
+            ):
+
+                offset_in_section = (
+                    address -
+                    section_address
+                )
+
+                file_offset = (
+                    section["offset"] +
+                    offset_in_section
+                )
+
+                return {
+                    "section": section.get(
+                        "name",
+                        ""
+                    ),
+                    "address": address,
+                    "section_address":
+                        section_address,
+                    "section_size":
+                        section_size,
+                    "offset_in_section":
+                        offset_in_section,
+                    "file_offset":
+                        file_offset,
+                }
+
+        return None
+
+    # ==============================================
     # SYMBOL TABLE
     # ==============================================
 
@@ -372,6 +441,7 @@ class ELFReader:
 
             if self.bits == 32:
                 entry_size = 16
+
             else:
                 entry_size = 24
 
@@ -430,6 +500,7 @@ class ELFReader:
                 continue
 
             if name_offset >= len(string_data):
+
                 name = ""
 
             else:
@@ -578,11 +649,13 @@ class ELFReader:
         for symbol_section in symbol_sections:
 
             if symbol_section["name"] == ".dynsym":
+
                 string_section = string_sections.get(
                     ".dynstr"
                 )
 
             else:
+
                 string_section = string_sections.get(
                     ".strtab"
                 )
