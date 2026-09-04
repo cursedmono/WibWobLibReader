@@ -92,6 +92,108 @@ class ELFReader:
         )
 
     # ==============================================
+    # SECTION TYPE
+    # ==============================================
+
+    def get_section_type_name(self, section_type):
+
+        types = {
+            0: "NULL",
+            1: "PROGBITS",
+            2: "SYMTAB",
+            3: "STRTAB",
+            4: "RELA",
+            5: "HASH",
+            6: "DYNAMIC",
+            7: "NOTE",
+            8: "NOBITS",
+            9: "REL",
+            11: "DYNSYM",
+            14: "INIT_ARRAY",
+            15: "FINI_ARRAY",
+            0x70000000: "LOOS",
+            0x6FFFFFFF: "HIOS",
+        }
+
+        return types.get(
+            section_type,
+            f"UNKNOWN ({section_type})"
+        )
+
+    # ==============================================
+    # SECTION FLAGS
+    # ==============================================
+
+    def get_section_flags(self, flags):
+
+        result = []
+
+        # SHF_WRITE
+        if flags & 0x1:
+            result.append("WRITE")
+
+        # SHF_ALLOC
+        if flags & 0x2:
+            result.append("ALLOC")
+
+        # SHF_EXECINSTR
+        if flags & 0x4:
+            result.append("EXECINSTR")
+
+        # SHF_MERGE
+        if flags & 0x10:
+            result.append("MERGE")
+
+        # SHF_STRINGS
+        if flags & 0x20:
+            result.append("STRINGS")
+
+        # SHF_INFO_LINK
+        if flags & 0x40:
+            result.append("INFO_LINK")
+
+        # SHF_LINK_ORDER
+        if flags & 0x80:
+            result.append("LINK_ORDER")
+
+        # SHF_OS_NONCONFORMING
+        if flags & 0x100:
+            result.append("OS_NONCONFORMING")
+
+        # SHF_GROUP
+        if flags & 0x200:
+            result.append("GROUP")
+
+        # SHF_TLS
+        if flags & 0x400:
+            result.append("TLS")
+
+        if not result:
+            return "NONE"
+
+        return " | ".join(result)
+
+    # ==============================================
+    # SECTION PERMISSIONS
+    # ==============================================
+
+    def get_section_permissions(self, flags):
+
+        write = bool(flags & 0x1)
+        executable = bool(flags & 0x4)
+
+        if executable and write:
+            return "LEITURA / ESCRITA / EXECUÇÃO"
+
+        if executable:
+            return "LEITURA / EXECUÇÃO"
+
+        if write:
+            return "LEITURA / ESCRITA"
+
+        return "SOMENTE LEITURA"
+
+    # ==============================================
     # SECTION HEADERS
     # ==============================================
 
@@ -161,9 +263,13 @@ class ELFReader:
 
                 name = values[0]
                 section_type = values[1]
+                flags = values[2]
+                section_addr = values[3]
                 section_offset = values[4]
                 section_size = values[5]
                 link = values[6]
+                info = values[7]
+                addralign = values[8]
                 entsize = values[9]
 
             else:
@@ -178,17 +284,25 @@ class ELFReader:
 
                 name = values[0]
                 section_type = values[1]
+                flags = values[2]
+                section_addr = values[3]
                 section_offset = values[4]
                 section_size = values[5]
                 link = values[6]
+                info = values[7]
+                addralign = values[8]
                 entsize = values[9]
 
             sections.append({
                 "name_offset": name,
                 "type": section_type,
+                "flags": flags,
+                "addr": section_addr,
                 "offset": section_offset,
                 "size": section_size,
                 "link": link,
+                "info": info,
+                "addralign": addralign,
                 "entsize": entsize,
             })
 
@@ -392,6 +506,45 @@ class ELFReader:
                     )
 
         return imports
+
+    # ==============================================
+    # SYMBOL TYPE
+    # ==============================================
+
+    def get_symbol_type_name(self, symbol_type):
+
+        types = {
+            0: "NOTYPE",
+            1: "OBJECT",
+            2: "FUNC",
+            3: "SECTION",
+            4: "FILE",
+            5: "COMMON",
+            6: "TLS",
+            10: "GNU_IFUNC",
+        }
+
+        return types.get(
+            symbol_type,
+            f"UNKNOWN ({symbol_type})"
+        )
+
+    # ==============================================
+    # SYMBOL BINDING
+    # ==============================================
+
+    def get_symbol_binding_name(self, binding):
+
+        bindings = {
+            0: "LOCAL",
+            1: "GLOBAL",
+            2: "WEAK",
+        }
+
+        return bindings.get(
+            binding,
+            f"UNKNOWN ({binding})"
+        )
 
     # ==============================================
     # EXPORTS

@@ -107,10 +107,12 @@ def main():
             print("4 - C++ Symbols")
             print("5 - Imports")
             print("6 - Exports")
-            print("7 - URLs")
-            print("8 - Caminhos")
-            print("9 - Bibliotecas (.so)")
-            print("10 - Exportar")
+            print("7 - Sections")
+            print("8 - URLs")
+            print("9 - Caminhos")
+            print("10 - Bibliotecas (.so)")
+            print("11 - Exportar")
+            print("0 - Sair")
 
             option = input("\nEscolha: ").strip()
 
@@ -253,22 +255,157 @@ def main():
                     f"Encontrados: {len(results):,}"
                 )
 
+                symbols = [
+                    symbol["name"]
+                    for symbol in results
+                ]
+
+                print("\nDemangling exports...")
+
+                demangled = demangle_symbols(
+                    symbols
+                )
+
                 for i, symbol in enumerate(
-                    results,
+                    results
+                ):
+
+                    original = symbol["name"]
+
+                    readable = demangled[i]
+
+                    symbol_type = (
+                        reader.get_symbol_type_name(
+                            symbol["type"]
+                        )
+                    )
+
+                    binding = (
+                        reader.get_symbol_binding_name(
+                            symbol["binding"]
+                        )
+                    )
+
+                    print(
+                        f"\n[{i + 1:04}]"
+                    )
+
+                    print(
+                        f"     Nome:      "
+                        f"{original}"
+                    )
+
+                    if readable != original:
+
+                        print(
+                            f"     Readable:  "
+                            f"{readable}"
+                        )
+
+                    print(
+                        f"     Endereço:  "
+                        f"0x{symbol['value']:08X}"
+                    )
+
+                    print(
+                        f"     Tamanho:   "
+                        f"{symbol['size']} bytes"
+                    )
+
+                    print(
+                        f"     Tipo:      "
+                        f"{symbol_type}"
+                    )
+
+                    print(
+                        f"     Binding:   "
+                        f"{binding}"
+                    )
+
+            # ======================================
+            # SECTIONS
+            # ======================================
+
+            elif option == "7":
+
+                sections = reader.get_section_headers()
+
+                print("\n" + "=" * 60)
+                print("Sections ELF")
+                print("=" * 60)
+
+                print(
+                    f"Encontradas: {len(sections):,}"
+                )
+
+                for i, section in enumerate(
+                    sections,
                     1
                 ):
 
+                    section_type = (
+                        reader.get_section_type_name(
+                            section["type"]
+                        )
+                    )
+
+                    flags = (
+                        reader.get_section_flags(
+                            section["flags"]
+                        )
+                    )
+
+                    permissions = (
+                        reader.get_section_permissions(
+                            section["flags"]
+                        )
+                    )
+
                     print(
-                        f"[{i:04}] "
-                        f"0x{symbol['value']:08X} "
-                        f"{symbol['name']}"
+                        f"\n[{i:02}] "
+                        f"{section['name']}"
+                    )
+
+                    print(
+                        f"     Endereço: "
+                        f"0x{section['addr']:08X}"
+                    )
+
+                    print(
+                        f"     Offset:   "
+                        f"0x{section['offset']:08X}"
+                    )
+
+                    print(
+                        f"     Tamanho:  "
+                        f"{section['size']:,} bytes"
+                    )
+
+                    print(
+                        f"     Tipo:     "
+                        f"{section_type}"
+                    )
+
+                    print(
+                        f"     Flags:    "
+                        f"{flags}"
+                    )
+
+                    print(
+                        f"     Permissão: "
+                        f"{permissions}"
+                    )
+
+                    print(
+                        f"     Entsize:  "
+                        f"{section['entsize']} bytes"
                     )
 
             # ======================================
             # URLs
             # ======================================
 
-            elif option == "7":
+            elif option == "8":
 
                 results = filter_urls(
                     strings
@@ -283,7 +420,7 @@ def main():
             # CAMINHOS
             # ======================================
 
-            elif option == "8":
+            elif option == "9":
 
                 results = filter_paths(
                     strings
@@ -298,7 +435,7 @@ def main():
             # BIBLIOTECAS
             # ======================================
 
-            elif option == "9":
+            elif option == "10":
 
                 results = filter_libraries(
                     strings
@@ -309,18 +446,19 @@ def main():
                     results
                 )
 
-
             # ======================================
             # EXPORTAR
             # ======================================
 
-            elif option == "10":
+            elif option == "11":
 
                 print("\nExportando análise...")
 
                 output_dir = "output"
 
-                cpp_symbols = filter_cpp_symbols(strings)
+                cpp_symbols = filter_cpp_symbols(
+                    strings
+                )
 
                 file1 = export_strings(
                     strings,
