@@ -684,6 +684,254 @@ class ELFReader:
 
         return list(exports.values())
 
+        # ==============================================
+    # PROGRAM HEADER TYPE
+    # ==============================================
+
+    def get_program_type_name(self, program_type):
+
+        types = {
+            0: "NULL",
+            1: "LOAD",
+            2: "DYNAMIC",
+            3: "INTERP",
+            4: "NOTE",
+            5: "SHLIB",
+            6: "PHDR",
+            7: "TLS",
+            0x6474E550: "GNU_EH_FRAME",
+            0x6474E551: "GNU_STACK",
+            0x6474E552: "GNU_RELRO",
+        }
+
+        return types.get(
+            program_type,
+            f"UNKNOWN (0x{program_type:08X})"
+        )
+
+    # ==============================================
+    # PROGRAM HEADER FLAGS
+    # ==============================================
+
+    def get_program_flags(self, flags):
+
+        result = []
+
+        # PF_X
+        if flags & 0x1:
+            result.append("EXEC")
+
+        # PF_W
+        if flags & 0x2:
+            result.append("WRITE")
+
+        # PF_R
+        if flags & 0x4:
+            result.append("READ")
+
+        if not result:
+            return "NONE"
+
+        return " | ".join(result)
+
+    # ==============================================
+    # PROGRAM HEADERS
+    # ==============================================
+
+    def get_program_headers(self):
+
+        if self.bits == 32:
+
+            phoff = struct.unpack(
+                self.endian + "I",
+                self.data[28:32]
+            )[0]
+
+            phentsize = struct.unpack(
+                self.endian + "H",
+                self.data[42:44]
+            )[0]
+
+            phnum = struct.unpack(
+                self.endian + "H",
+                self.data[44:46]
+            )[0]
+
+        else:
+
+            phoff = struct.unpack(
+                self.endian + "Q",
+                self.data[32:40]
+            )[0]
+
+            phentsize = struct.unpack(
+                self.endian + "H",
+                self.data[54:56]
+            )[0]
+
+            phnum = struct.unpack(
+                self.endian + "H",
+                self.data[56:58]
+            )[0]
+
+        programs = []
+
+        for i in range(phnum):
+
+            offset = (
+                phoff +
+                i * phentsize
+            )
+
+            try:
+
+                if self.bits == 32:
+
+                    values = struct.unpack(
+                        self.endian + "IIIIIIII",
+                        self.data[
+                            offset:
+                            offset + 32
+                        ]
+                    )
+
+                    (
+                        program_type,
+                        file_offset,
+                        virtual_address,
+                        physical_address,
+                        file_size,
+                        memory_size,
+                        flags,
+                        align
+                    ) = values
+
+                else:
+
+                    values = struct.unpack(
+                        self.endian + "IIQQQQQQ",
+                        self.data[
+                            offset:
+                            offset + 56
+                        ]
+                    )
+
+                    (
+                        program_type,
+                        flags,
+                        file_offset,
+                        virtual_address,
+                        physical_address,
+                        file_size,
+                        memory_size,
+                        align
+                    ) = values
+
+            except struct.error:
+                continue
+
+            programs.append({
+                "type": program_type,
+                "offset": file_offset,
+                "vaddr": virtual_address,
+                "paddr": physical_address,
+                "filesz": file_size,
+                "memsz": memory_size,
+                "flags": flags,
+                "align": align,
+            })
+
+        return programs
+
+    # ==============================================
+    # FIND PT_LOAD BY ADDRESS
+    # ==============================================
+
+    def find_load_segment_by_address(self, address):
+
+        programs = self.get_program_headers()
+
+        for program in programs:
+
+            # PT_LOAD
+            if program["type"] != 1:
+                continue
+
+            start = program["vaddr"]
+            end = (
+                start +
+                program["memsz"]
+            )
+
+            if (
+                address >= start
+                and address < end
+            ):
+
+                offset_in_segment = (
+                    address -
+                    start
+                )
+
+                # Endereço dentro da parte
+                # realmente presente no arquivo
+                if offset_in_segment >= program["filesz"]:
+                    return {
+                        "program": program,
+                        "file_offset": None,
+                        "offset_in_segment":
+                            offset_in_segment,
+                        "in_file": False,
+                    }
+
+                file_offset = (
+                    program["offset"] +
+                    offset_in_segment
+                )
+
+                return {
+                    "program": program,
+                    "file_offset": file_offset,
+                    "offset_in_segment":
+                        offset_in_segment,
+                    "in_file": True,
+                }
+
+        return None
+
+    # ==============================================
+    # FIND ADDRESS - PT_LOAD + SECTION
+    # ==============================================
+
+    def resolve_address(self, address):
+
+        load = self.find_load_segment_by_address(
+            address
+        )
+
+        section = self.find_section_by_address(
+            address
+        )
+
+        result = {
+            "address": address,
+            "load": load,
+            "section": section,
+        }
+
+        if load and load["file_offset"] is not None:
+
+            result["file_offset"] = (
+                load["file_offset"]
+            )
+
+        else:
+
+            result["file_offset"] = None
+
+        return result
+    
+
     # ==============================================
     # SHOW ELF INFO
     # ==============================================
